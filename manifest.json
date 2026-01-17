@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Gotcha",
+  "version": "1.0",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "192": "icon.png"
+  }
+}
