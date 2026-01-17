@@ -8,3 +8,7 @@
 
 - mostra textos na tela (e.g Resposta)
 - chama código que contém o llm e a personalização (cores, bordas)
+
+### Demo
+https://github.com/user-attachments/assets/0fb98bce-76af-4426-bebe-93f2468ba707
+
