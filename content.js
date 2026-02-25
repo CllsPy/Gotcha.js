@@ -1,6 +1,6 @@
-// Cria o popup dinamicamente
+// Cria o popup dinamicamente na página
 function initGotcha() {
-  if (document.getElementById("gotcha-popup")) return;
+  if (document.getElementById("gotcha-popup")) return null;
 
   const div = document.createElement("div");
   div.id = "gotcha-popup";
@@ -17,13 +17,20 @@ function initGotcha() {
 }
 
 const popup = initGotcha();
+if (!popup) throw new Error("Gotcha já inicializado");
+
 const palavraEl = document.getElementById("texto-selecionado");
 const explicacaoEl = document.getElementById("explicacao");
 const closeBtn = document.getElementById("gotcha-close");
 const configBtn = document.getElementById("gotcha-config");
 
-let apiKey = localStorage.getItem("gotcha_api_key") || "";
+let apiKey = "";
 let currentController = null;
+
+// Carrega a API Key do storage da extensão
+chrome.storage.local.get("gotcha_api_key", (result) => {
+  apiKey = result.gotcha_api_key || "";
+});
 
 // Configurar API Key
 configBtn.addEventListener("click", () => {
@@ -31,7 +38,7 @@ configBtn.addEventListener("click", () => {
   if (key !== null) {
     if (key.startsWith("sk-")) {
       apiKey = key;
-      localStorage.setItem("gotcha_api_key", apiKey);
+      chrome.storage.local.set({ gotcha_api_key: apiKey });
       alert("API Key salva!");
     } else if (key !== "") {
       alert('API Key inválida. Deve começar com "sk-"');
@@ -62,31 +69,28 @@ document.addEventListener("keydown", (e) => {
 
 // Seleção de texto
 document.addEventListener("mouseup", async (e) => {
-  // Ignora se clicou no popup
   if (popup.contains(e.target)) return;
 
   const texto = window.getSelection().toString().trim();
 
-  // Só explica se tiver texto e for até 5 palavras
   if (!texto || texto.split(/\s+/).length > 5) {
     esconder();
     return;
   }
 
-  // Cancela requisição anterior
   if (currentController) currentController.abort();
   currentController = new AbortController();
 
-  // Mostra popup
   palavraEl.textContent = texto;
   explicacaoEl.textContent = "Explicando";
   explicacaoEl.className = "loading";
   mostrar();
 
-  // Busca explicação
   const resposta = await explicar(texto, currentController.signal);
-  explicacaoEl.textContent = resposta;
-  explicacaoEl.className = "";
+  if (resposta) {
+    explicacaoEl.textContent = resposta;
+    explicacaoEl.className = "";
+  }
 });
 
 function mostrar() {
@@ -94,15 +98,24 @@ function mostrar() {
   const range = selection.getRangeAt(0);
   const selRect = range.getBoundingClientRect();
 
-  const winWidth = window.innerWidth;
+  const popupWidth = 340;
+  const margin = 12;
 
-  // Alinha à esquerda da seleção, 8px abaixo dela
-  let left = selRect.left + window.scrollX;
-  let top = selRect.bottom + window.scrollY + 8;
+  // Posição em viewport (position: fixed)
+  let left = selRect.left;
+  let top = selRect.bottom + 8;
 
-  // Se passar da borda direita, recua
-  if (left + 280 > winWidth + window.scrollX) {
-    left = winWidth + window.scrollX - 295;
+  // Clamp na borda direita
+  if (left + popupWidth + margin > window.innerWidth) {
+    left = window.innerWidth - popupWidth - margin;
+  }
+  // Clamp na borda esquerda
+  if (left < margin) left = margin;
+
+  // Se não cabe abaixo, coloca acima da seleção
+  const popupHeight = 140;
+  if (top + popupHeight > window.innerHeight) {
+    top = selRect.top - popupHeight - 8;
   }
 
   popup.style.left = `${left}px`;
@@ -143,8 +156,7 @@ async function explicar(texto, signal) {
 
     if (!res.ok) {
       if (res.status === 401) return "Erro: API Key inválida";
-      if (res.status === 429)
-        return "Erro: Muitas requisições. Aguarde um momento.";
+      if (res.status === 429) return "Erro: Muitas requisições. Aguarde.";
       throw new Error(`HTTP ${res.status}`);
     }
 
@@ -157,9 +169,4 @@ async function explicar(texto, signal) {
     console.error("Gotcha error:", err);
     return "Erro ao conectar. Verifique sua conexão.";
   }
-}
-
-// Verifica se tem API key configurada ao iniciar
-if (!apiKey) {
-  console.log("Gotcha: Clique em ⚙️ no popup para configurar sua API Key");
 }

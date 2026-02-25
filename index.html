@@ -7,27 +7,31 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!-- Conteúdo de exemplo (pode apagar e usar em qualquer página) -->
-    <div
-      style="
-        max-width: 600px;
-        margin: 50px auto;
-        padding: 20px;
-        font-family: system-ui;
-      "
-    >
-      <h1>Selecione qualquer palavra</h1>
-      <p>
-        Computação quântica é um campo da computação que utiliza fenômenos da
-        mecânica quântica. Inteligência artificial refere-se à simulação de
-        processos de inteligência humana por máquinas. Fotossíntese é o processo
-        bioquímico que converte luz em energia química.
+    <div class="container">
+      <h1>Gotcha <span class="badge">AI</span></h1>
+      <p class="instrucao">
+        Selecione qualquer palavra ou frase (até 5 palavras) em qualquer página
+        da web — a explicação aparece ali mesmo!
       </p>
-      <p>
-        Selecione qualquer termo acima para ver a explicação simples aparecer!
-      </p>
+
+      <div class="demo-hint">
+        <span class="demo-icon">👆</span>
+        <span>Experimente selecionar texto em qualquer aba aberta</span>
+      </div>
+
+      <div class="config-section">
+        <label for="api-key-input">OpenAI API Key</label>
+        <input
+          id="api-key-input"
+          type="password"
+          placeholder="sk-..."
+          autocomplete="off"
+        />
+        <button id="api-key-save">Salvar</button>
+        <div id="api-key-status" class="status"></div>
+      </div>
     </div>
 
-    <script src="content.js"></script>
+    <script src="popup.js"></script>
   </body>
 </html>
